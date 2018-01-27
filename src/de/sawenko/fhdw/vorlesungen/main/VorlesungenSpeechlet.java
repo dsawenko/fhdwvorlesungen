@@ -7,7 +7,7 @@
 
     or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-package com.amazon.asksdk.historybuff;
+package de.sawenko.fhdw.vorlesungen.main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -97,8 +97,8 @@ import com.amazon.speech.ui.SimpleCard;
  * Alexa: "Good bye!"
  * <p>
  */
-public class HistoryBuffSpeechlet implements SpeechletV2 {
-    private static final Logger log = LoggerFactory.getLogger(HistoryBuffSpeechlet.class);
+public class VorlesungenSpeechlet implements SpeechletV2 {
+    private static final Logger log = LoggerFactory.getLogger(VorlesungenSpeechlet.class);
 
     /**
      * URL prefix to download history content from Wikipedia.
@@ -161,11 +161,11 @@ public class HistoryBuffSpeechlet implements SpeechletV2 {
     private DirectiveService directiveService;
 
     /**
-     * Constructs an instance of {@link HistoryBuffSpeechlet}.
+     * Constructs an instance of {@link VorlesungenSpeechlet}.
      *
      * @param directiveService implementation of directive service
      */
-    public HistoryBuffSpeechlet(DirectiveService directiveService) {
+    public VorlesungenSpeechlet(DirectiveService directiveService) {
         this.directiveService = directiveService;
     }
 

@@ -7,7 +7,7 @@
 
     or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-package com.amazon.asksdk.historybuff;
+package de.sawenko.fhdw.vorlesungen.main;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,7 +23,7 @@ import com.amazon.speech.speechlet.services.DirectiveServiceClient;
  * build this project using the {@code lambda-compile} Ant task and upload the resulting zip file to
  * power your function.
  */
-public class HistoryBuffSpeechletRequestStreamHandler extends SpeechletRequestStreamHandler {
+public class VorlesungenSpeechletRequestStreamHandler extends SpeechletRequestStreamHandler {
 
     private static final Set<String> supportedApplicationIds;
 
@@ -36,11 +36,11 @@ public class HistoryBuffSpeechletRequestStreamHandler extends SpeechletRequestSt
         // supportedApplicationIds.add("[unique-value-here]");
     }
 
-    public HistoryBuffSpeechletRequestStreamHandler() {
-        super(new HistoryBuffSpeechlet(new DirectiveServiceClient()), supportedApplicationIds);
+    public VorlesungenSpeechletRequestStreamHandler() {
+        super(new VorlesungenSpeechlet(new DirectiveServiceClient()), supportedApplicationIds);
     }
 
-    public HistoryBuffSpeechletRequestStreamHandler(Speechlet speechlet,
+    public VorlesungenSpeechletRequestStreamHandler(Speechlet speechlet,
             Set<String> supportedApplicationIds) {
         super(speechlet, supportedApplicationIds);
     }
