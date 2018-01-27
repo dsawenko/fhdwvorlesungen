@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,64 +50,24 @@ import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.ui.OutputSpeech;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.SsmlOutputSpeech;
+
+import biweekly.ICalendar;
+import biweekly.component.VEvent;
+import biweekly.io.text.ICalReader;
+import biweekly.property.DateEnd;
+import biweekly.property.DateStart;
+import biweekly.util.DateTimeComponents;
+
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
 
-/**
- * This sample shows how to create a Lambda function for handling Alexa Skill requests that:
- *
- * <ul>
- * <li><b>Web service</b>: communicate with an external web service to get events for specified days
- * in history (Wikipedia API)</li>
- * <li><b>Pagination</b>: after obtaining a list of events, read a small subset of events and wait
- * for user prompt to read the next subset of events by maintaining session state</li>
- * <p>
- * <li><b>Dialog and Session state</b>: Handles two models, both a one-shot ask and tell model, and
- * a multi-turn dialog model</li>
- * <li><b>SSML</b>: Using SSML tags to control how Alexa renders the text-to-speech</li>
- * </ul>
- * <p>
- * <h2>Examples</h2>
- * <p>
- * <b>One-shot model</b>
- * <p>
- * User: "Alexa, ask History Buff what happened on August thirtieth."
- * <p>
- * Alexa: "For August thirtieth, in 2003, [...] . Wanna go deeper in history?"
- * <p>
- * User: "No."
- * <p>
- * Alexa: "Good bye!"
- * <p>
- *
- * <b>Dialog model</b>
- * <p>
- * User: "Alexa, open History Buff"
- * <p>
- * Alexa: "History Buff. What day do you want events for?"
- * <p>
- * User: "August thirtieth."
- * <p>
- * Alexa: "For August thirtieth, in 2003, [...] . Wanna go deeper in history?"
- * <p>
- * User: "Yes."
- * <p>
- * Alexa: "In 1995, Bosnian war [...] . Wanna go deeper in history?"
- * <p>
- * User: "No."
- * <p>
- * Alexa: "Good bye!"
- * <p>
- */
 public class VorlesungenSpeechlet implements SpeechletV2 {
-    private static final Logger log = LoggerFactory.getLogger(VorlesungenSpeechlet.class);
+    private static final Logger log = LoggerFactory.getLogger(VorlesungenSpeechlet.class);   
 
     /**
-     * URL prefix to download history content from Wikipedia.
+     * URL prefix to download ics from FHDW Intranet.
      */
-    private static final String URL_PREFIX =
-            "https://en.wikipedia.org/w/api.php?action=query&prop=extracts"
-                    + "&format=json&explaintext=&exsectionformat=plain&redirects=&titles=";
+    private static final String URL_PREFIX = "http://intranet.bib.de/ical/";
 
     /**
      * Constant defining number of events to be read at one time.
@@ -141,18 +103,18 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      * Array of month names.
      */
     private static final String[] MONTH_NAMES = {
-            "January",
-            "February",
-            "March",
+            "Januar",
+            "Februar",
+            "März",
             "April",
-            "May",
-            "June",
-            "July",
+            "Mai",
+            "Juni",
+            "Juli",
             "August",
             "September",
-            "October",
+            "Oktober",
             "November",
-            "December"
+            "Dezember"
     };
 
     /**
@@ -200,9 +162,9 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 
         if ("GetFirstEventIntent".equals(intentName)) {
             return handleFirstEventRequest(requestEnvelope);
-        } else if ("GetNextEventIntent".equals(intentName)) {
+        }/* else if ("GetNextEventIntent".equals(intentName)) {
             return handleNextEventRequest(requestEnvelope.getSession());
-        } else if ("AMAZON.HelpIntent".equals(intentName)) {
+        }*/ else if ("AMAZON.HelpIntent".equals(intentName)) {
             // Create the plain text output.
             String speechOutput =
                     "With History Buff, you can get"
@@ -288,7 +250,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
     }
 
     /**
-     * Prepares the speech to reply to the user. Obtain events from Wikipedia for the date specified
+     * Prepares the speech to reply to the user. Obtain events from FHDW for the date specified
      * by the user (or for today's date, if no date is specified), and return those events in both
      * speech and SimpleCard format.
      *
@@ -306,18 +268,18 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         String month = MONTH_NAMES[calendar.get(Calendar.MONTH)];
         String date = Integer.toString(calendar.get(Calendar.DATE));
 
-        String speechPrefixContent = "<p>For " + month + " " + date + "</p> ";
-        String cardPrefixContent = "For " + month + " " + date + ", ";
-        String cardTitle = "Events on " + month + " " + date;
+        String speechPrefixContent = "<p>Vorlesungen am " + date + ". " + month + "</p> ";
+        String cardPrefixContent = "Vorlesungen am " + month + " " + date + ", ";
+        String cardTitle = "Vorlesung am " + month + " " + date;
 
         // Dispatch a progressive response to engage the user while fetching events
         dispatchProgressiveResponse(request.getRequestId(), "Searching", systemState, apiEndpoint);
 
-        ArrayList<String> events = getJsonEventsFromWikipedia(month, date);
+        ArrayList<VEvent> events = getEventsFromFHDW("ifbw415a", calendar);
         String speechOutput = "";
         if (events.isEmpty()) {
             speechOutput =
-                    "There is a problem connecting to Wikipedia at this time."
+                    "There is a problem connecting to FHDW at this time."
                             + " Please try again later.";
 
             // Create the plain text output
@@ -330,21 +292,27 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
             speechOutputBuilder.append(speechPrefixContent);
             StringBuilder cardOutputBuilder = new StringBuilder();
             cardOutputBuilder.append(cardPrefixContent);
-            for (int i = 0; i < PAGINATION_SIZE; i++) {
+            for (VEvent event : events) {
+            	String summary = event.getSummary().getValue();
+            	
                 speechOutputBuilder.append("<p>");
-                speechOutputBuilder.append(events.get(i));
+                speechOutputBuilder.append(summary);
+                String time = getTime(event.getDateStart(), event.getDateEnd());
+                speechOutputBuilder.append(" um " + time);
                 speechOutputBuilder.append("</p> ");
-                cardOutputBuilder.append(events.get(i));
+                cardOutputBuilder.append(summary);
                 cardOutputBuilder.append("\n");
+                
+                
             }
-            speechOutputBuilder.append(" Wanna go deeper in history?");
-            cardOutputBuilder.append(" Wanna go deeper in history?");
+//            speechOutputBuilder.append(" Wanna go deeper in history?");
+//            cardOutputBuilder.append(" Wanna go deeper in history?");
             speechOutput = speechOutputBuilder.toString();
 
-            String repromptText =
-                    "With History Buff, you can get historical events for any day of the year."
-                            + " For example, you could say today, or August thirtieth."
-                            + " Now, which day do you want?";
+            String repromptText = "FHDW-Vorlesungen reprompt text";
+//                    "With History Buff, you can get historical events for any day of the year."
+//                            + " For example, you could say today, or August thirtieth."
+//                            + " Now, which day do you want?";
 
             // Create the Simple card content.
             SimpleCard card = new SimpleCard();
@@ -353,11 +321,12 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 
             // After reading the first 3 events, set the count to 3 and add the events
             // to the session attributes
-            session.setAttribute(SESSION_INDEX, PAGINATION_SIZE);
-            session.setAttribute(SESSION_TEXT, events);
+            //session.setAttribute(SESSION_INDEX, PAGINATION_SIZE);
+            //session.setAttribute(SESSION_TEXT, events);
 
             SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", true, repromptText, false);
             response.setCard(card);
+            log.debug(response.toString());
             return response;
         }
     }
@@ -373,9 +342,9 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      *            object containing session attributes with events list and index
      * @return SpeechletResponse object with voice/card response to return to the user
      */
-    private SpeechletResponse handleNextEventRequest(Session session) {
+  /*  private SpeechletResponse handleNextEventRequest(Session session) {
         String cardTitle = "More events on this day in history";
-        ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
+        ArrayList<VEvent> events = (ArrayList<VEvent>) session.getAttribute(SESSION_TEXT);
         int index = (Integer) session.getAttribute(SESSION_INDEX);
         String speechOutput = "";
         String cardOutput = "";
@@ -393,9 +362,9 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
             StringBuilder cardOutputBuilder = new StringBuilder();
             for (int i = 0; i < PAGINATION_SIZE && index < events.size(); i++) {
                 speechOutputBuilder.append("<p>");
-                speechOutputBuilder.append(events.get(index));
+                speechOutputBuilder.append(events.get(index).getSummary().getValue());
                 speechOutputBuilder.append("</p> ");
-                cardOutputBuilder.append(events.get(index));
+                cardOutputBuilder.append(events.get(index).getSummary().getValue());
                 cardOutputBuilder.append(" ");
                 index++;
             }
@@ -417,82 +386,54 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", true, repromptText, false);
         response.setCard(card);
         return response;
-    }
+    }*/
 
     /**
-     * Download JSON-formatted list of events from Wikipedia, for a defined day/date, and return a
-     * String array of the events, with each event representing an element in the array.
+     * Download calendar ics file for a specific course, and return a
+     * list of the events.
      *
-     * @param month
-     *            the month to get events for, example: April
-     * @param date
-     *            the date to get events for, example: 7
-     * @return String array of events for that date, 1 event per element of the array
+     * @param course
+     *            the course to get events for, example: ifbw415a
+     * @return list of events for that course
      */
-    private ArrayList<String> getJsonEventsFromWikipedia(String month, String date) {
+    private ArrayList<VEvent> getEventsFromFHDW(String course, Calendar calendar) {
         InputStreamReader inputStream = null;
-        BufferedReader bufferedReader = null;
-        String text = "";
+        ICalReader reader = null;
+        ArrayList<VEvent> events = new ArrayList<>();
+        ArrayList<VEvent> resultEvents = new ArrayList<>();
+        events.clear();
+        resultEvents.clear();
         try {
-            String line;
-            URL url = new URL(URL_PREFIX + month + "_" + date);
+            URL url = new URL(URL_PREFIX + course + ".ics");
             inputStream = new InputStreamReader(url.openStream(), Charset.forName("US-ASCII"));
-            bufferedReader = new BufferedReader(inputStream);
-            StringBuilder builder = new StringBuilder();
-            while ((line = bufferedReader.readLine()) != null) {
-                builder.append(line);
+            
+            reader = new ICalReader(inputStream);
+            ICalendar ical;
+
+            while ((ical = reader.readNext()) != null) {
+                events.addAll(ical.getEvents());
             }
-            text = builder.toString();
+            
         } catch (IOException e) {
-            // reset text variable to a blank string
-            text = "";
+        	events.clear();
         } finally {
             IOUtils.closeQuietly(inputStream);
-            IOUtils.closeQuietly(bufferedReader);
+            IOUtils.closeQuietly(reader);
         }
-        return parseJson(text);
-    }
+        
+        for(VEvent event : events) {
+        	DateTimeComponents dateTimeComponents = event.getDateStart().getValue().getRawComponents();
+        	 int eYear = dateTimeComponents.getYear();
+             int eMonth = dateTimeComponents.getMonth();
+             int eDate = dateTimeComponents.getDate();
 
-    /**
-     * Parse JSON-formatted list of events/births/deaths from Wikipedia, extract list of events and
-     * split the events into a String array of individual events. Run Regex matchers to make the
-     * list pretty by adding a comma after the year to add a pause, and by removing a unicode char.
-     *
-     * @param text
-     *            the JSON formatted list of events/births/deaths for a certain date
-     * @return String array of events for that date, 1 event per element of the array
-     */
-    private ArrayList<String> parseJson(String text) {
-        // sizeOf (\nEvents\n) is 10
-        text =
-                text.substring(text.indexOf("\\nEvents\\n") + SIZE_OF_EVENTS,
-                        text.indexOf("\\n\\n\\nBirths"));
-        ArrayList<String> events = new ArrayList<String>();
-        if (text.isEmpty()) {
-            return events;
+             //month ist von 0-11 und eMonth von 1-12 ... meh
+             if (eYear == calendar.get(Calendar.YEAR) && eMonth == (calendar.get(Calendar.MONTH) + 1) && eDate == calendar.get(Calendar.DATE)) {
+                 resultEvents.add(event);
+             }
         }
-        int startIndex = 0, endIndex = 0;
-        while (endIndex != -1) {
-            endIndex = text.indexOf("\\n", startIndex + DELIMITER_SIZE);
-            String eventText =
-                    (endIndex == -1 ? text.substring(startIndex) : text.substring(startIndex,
-                            endIndex));
-            // replace dashes returned in text from Wikipedia's API
-            Pattern pattern = Pattern.compile("\\\\u2013\\s*");
-            Matcher matcher = pattern.matcher(eventText);
-            eventText = matcher.replaceAll("");
-            // add comma after year so Alexa pauses before continuing with the sentence
-            pattern = Pattern.compile("(^\\d+)");
-            matcher = pattern.matcher(eventText);
-            if (matcher.find()) {
-                eventText = matcher.replaceFirst(matcher.group(1) + ",");
-            }
-            eventText = "In " + eventText;
-            startIndex = endIndex + 2;
-            events.add(eventText);
-        }
-        Collections.reverse(events);
-        return events;
+        
+        return resultEvents;
     }
 
     /**
@@ -566,5 +507,13 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      */
     private SystemState getSystemState(Context context) {
         return context.getState(SystemInterface.class, SystemState.class);
+    }
+    
+    public String getTime(DateStart dateStart, DateEnd dateEnd) {
+        DateFormat dftime = new SimpleDateFormat("HH:mm");
+        dftime.setTimeZone(TimeZone.getTimeZone( "Europe/Berlin" ));
+        String dateStartStr = (dateStart == null) ? null : dftime.format(dateStart.getValue());
+        String dateEndStr = (dateEnd == null) ? null : dftime.format(dateEnd.getValue());
+        return dateStartStr + " bis " + dateEndStr;
     }
 }
