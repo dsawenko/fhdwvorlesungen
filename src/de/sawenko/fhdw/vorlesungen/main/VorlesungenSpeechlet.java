@@ -57,6 +57,8 @@ import biweekly.io.text.ICalReader;
 import biweekly.property.DateEnd;
 import biweekly.property.DateStart;
 import biweekly.util.DateTimeComponents;
+import de.sawenko.fhdw.vorlesungen.model.Vorlesung;
+import de.sawenko.fhdw.vorlesungen.util.Downloader;
 
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
@@ -275,12 +277,12 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         // Dispatch a progressive response to engage the user while fetching events
         dispatchProgressiveResponse(request.getRequestId(), "Searching", systemState, apiEndpoint);
 
-        ArrayList<VEvent> events = getEventsFromFHDW("ifbw415a", calendar);
+        Downloader.getEventsFromFHDW("ifbw415a", calendar);
+        Downloader.createAllModules();
+        
         String speechOutput = "";
-        if (events.isEmpty()) {
-            speechOutput =
-                    "There is a problem connecting to FHDW at this time."
-                            + " Please try again later.";
+        if (Downloader.events.isEmpty()) {
+            speechOutput = speechPrefixContent + " hast du keine Vorlesung";
 
             // Create the plain text output
             SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
@@ -292,12 +294,12 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
             speechOutputBuilder.append(speechPrefixContent);
             StringBuilder cardOutputBuilder = new StringBuilder();
             cardOutputBuilder.append(cardPrefixContent);
-            for (VEvent event : events) {
-            	String summary = event.getSummary().getValue();
+            for (Vorlesung v : Downloader.vorlesungen) {
+            	String summary = v.toString();
             	
                 speechOutputBuilder.append("<p>");
                 speechOutputBuilder.append(summary);
-                String time = getTime(event.getDateStart(), event.getDateEnd());
+                String time = getTime(v.getDateStart(), v.getDateEnd());
                 speechOutputBuilder.append(" um " + time);
                 speechOutputBuilder.append("</p> ");
                 cardOutputBuilder.append(summary);
@@ -305,26 +307,16 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
                 
                 
             }
-//            speechOutputBuilder.append(" Wanna go deeper in history?");
-//            cardOutputBuilder.append(" Wanna go deeper in history?");
             speechOutput = speechOutputBuilder.toString();
-
-            String repromptText = "FHDW-Vorlesungen reprompt text";
-//                    "With History Buff, you can get historical events for any day of the year."
-//                            + " For example, you could say today, or August thirtieth."
-//                            + " Now, which day do you want?";
 
             // Create the Simple card content.
             SimpleCard card = new SimpleCard();
             card.setTitle(cardTitle);
             card.setContent(cardOutputBuilder.toString());
 
-            // After reading the first 3 events, set the count to 3 and add the events
-            // to the session attributes
-            //session.setAttribute(SESSION_INDEX, PAGINATION_SIZE);
-            //session.setAttribute(SESSION_TEXT, events);
-
-            SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", true, repromptText, false);
+            SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
+            outputSpeech.setSsml("<speak>" + speechOutput + "</speak>");
+            SpeechletResponse response = SpeechletResponse.newTellResponse(outputSpeech);
             response.setCard(card);
             log.debug(response.toString());
             return response;
@@ -388,53 +380,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         return response;
     }*/
 
-    /**
-     * Download calendar ics file for a specific course, and return a
-     * list of the events.
-     *
-     * @param course
-     *            the course to get events for, example: ifbw415a
-     * @return list of events for that course
-     */
-    private ArrayList<VEvent> getEventsFromFHDW(String course, Calendar calendar) {
-        InputStreamReader inputStream = null;
-        ICalReader reader = null;
-        ArrayList<VEvent> events = new ArrayList<>();
-        ArrayList<VEvent> resultEvents = new ArrayList<>();
-        events.clear();
-        resultEvents.clear();
-        try {
-            URL url = new URL(URL_PREFIX + course + ".ics");
-            inputStream = new InputStreamReader(url.openStream(), Charset.forName("US-ASCII"));
-            
-            reader = new ICalReader(inputStream);
-            ICalendar ical;
-
-            while ((ical = reader.readNext()) != null) {
-                events.addAll(ical.getEvents());
-            }
-            
-        } catch (IOException e) {
-        	events.clear();
-        } finally {
-            IOUtils.closeQuietly(inputStream);
-            IOUtils.closeQuietly(reader);
-        }
-        
-        for(VEvent event : events) {
-        	DateTimeComponents dateTimeComponents = event.getDateStart().getValue().getRawComponents();
-        	 int eYear = dateTimeComponents.getYear();
-             int eMonth = dateTimeComponents.getMonth();
-             int eDate = dateTimeComponents.getDate();
-
-             //month ist von 0-11 und eMonth von 1-12 ... meh
-             if (eYear == calendar.get(Calendar.YEAR) && eMonth == (calendar.get(Calendar.MONTH) + 1) && eDate == calendar.get(Calendar.DATE)) {
-                 resultEvents.add(event);
-             }
-        }
-        
-        return resultEvents;
-    }
+    
 
     /**
      * Wrapper for creating the Ask response from the input strings.
