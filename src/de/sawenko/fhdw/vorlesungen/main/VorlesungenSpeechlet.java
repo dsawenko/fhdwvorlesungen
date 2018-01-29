@@ -63,6 +63,11 @@ import de.sawenko.fhdw.vorlesungen.util.Downloader;
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
 
+/**
+ * Build Skript: mvn assembly:assembly -DdescriptorId=jar-with-dependencies package
+ * @author Daniel
+ *
+ */
 public class VorlesungenSpeechlet implements SpeechletV2 {
     private static final Logger log = LoggerFactory.getLogger(VorlesungenSpeechlet.class);   
 
@@ -212,13 +217,12 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      * @return SpeechletResponse object with voice/card response to return to the user
      */
     private SpeechletResponse getWelcomeResponse() {
-        String speechOutput = "History buff. What day do you want events for?";
+        String speechOutput = "Willkommen beim FHDW Fuchs! Wie kann ich dir weiterhelfen?";
         // If the user either does not reply to the welcome message or says something that is not
         // understood, they will be prompted again with this text.
         String repromptText =
-                "With History Buff, you can get historical events for any day of the year. "
-                        + " For example, you could say today, or August thirtieth."
-                        + " Now, which day do you want?";
+                "Ich kann dir deine Vorlesungen für einen bestimmten Tag nennen. "
+                        + " Zum Beispiel könntest du mich fragen, ob du morgen eine Vorlesung hast.";
 
         return newAskResponse(speechOutput, false, repromptText, false);
     }

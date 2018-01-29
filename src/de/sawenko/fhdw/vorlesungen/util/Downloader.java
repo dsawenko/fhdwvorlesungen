@@ -131,5 +131,25 @@ public class Downloader {
 			vorlesungen.add(new Vorlesung(dateStart, dateEnd, getOrCreateModule(parts[0], parts[1]), room, summary));
 		}
 
+		sortVorlesung();
 	}
+	
+	private static void sortVorlesung() {
+        List<Vorlesung> sorted = new ArrayList<>();
+        Vorlesung first;
+
+        while (vorlesungen.size() != 0) {
+            first = vorlesungen.get(0);
+            for (Vorlesung v : vorlesungen) {
+                if (v.isBefore(first)) {
+                    first = v;
+                }
+            }
+            vorlesungen.remove(first);
+            sorted.add(first);
+
+        }
+        vorlesungen = sorted;
+    }
+
 }
