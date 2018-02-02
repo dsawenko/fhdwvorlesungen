@@ -70,12 +70,7 @@ import com.amazon.speech.ui.SimpleCard;
  */
 public class VorlesungenSpeechlet implements SpeechletV2 {
     private static final Logger log = LoggerFactory.getLogger(VorlesungenSpeechlet.class);   
-
-    /**
-     * URL prefix to download ics from FHDW Intranet.
-     */
-    private static final String URL_PREFIX = "http://intranet.bib.de/ical/";
-
+    
     /**
      * Constant defining number of events to be read at one time.
      */
@@ -100,12 +95,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      * Constant defining session attribute key for the intent slot key for the date of events.
      */
     private static final String SLOT_DAY = "day";
-
-    /**
-     * Size of events from Wikipedia response.
-     */
-    private static final int SIZE_OF_EVENTS = 10;
-
+    
     /**
      * Array of month names.
      */
@@ -279,7 +269,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         String cardTitle = "Vorlesung am " + month + " " + date;
 
         // Dispatch a progressive response to engage the user while fetching events
-        dispatchProgressiveResponse(request.getRequestId(), "Searching", systemState, apiEndpoint);
+        //dispatchProgressiveResponse(request.getRequestId(), "Searching", systemState, apiEndpoint);
 
         Downloader.getEventsFromFHDW("ifbw415a", calendar);
         Downloader.createAllModules();
