@@ -272,12 +272,11 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         //dispatchProgressiveResponse(request.getRequestId(), "Searching", systemState, apiEndpoint);
 
         Downloader.getEventsFromFHDW("ifbw415a", calendar);
-        Downloader.createAllModules();
         
         String speechOutput = "";
-        if (Downloader.events.isEmpty()) {
-            speechOutput = speechPrefixContent + " hast du keine Vorlesung";
-
+        if (Downloader.getVorlesungen().isEmpty()) {
+            speechOutput = "<p>Am " + date + ". " + month + " hast du keine Vorlesung.</p> ";
+            
             // Create the plain text output
             SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
             outputSpeech.setSsml("<speak>" + speechOutput + "</speak>");
@@ -288,7 +287,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
             speechOutputBuilder.append(speechPrefixContent);
             StringBuilder cardOutputBuilder = new StringBuilder();
             cardOutputBuilder.append(cardPrefixContent);
-            for (Vorlesung v : Downloader.vorlesungen) {
+            for (Vorlesung v : Downloader.getVorlesungen()) {
             	String summary = v.toString();
             	
                 speechOutputBuilder.append("<p>");

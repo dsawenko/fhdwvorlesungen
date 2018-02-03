@@ -20,9 +20,9 @@ import de.sawenko.fhdw.vorlesungen.model.Module;
 import de.sawenko.fhdw.vorlesungen.model.Vorlesung;
 
 public class Downloader {
-	public static List<VEvent> events = new ArrayList<>();
-	public static List<Module> modules = new ArrayList<>();
-	public static List<Vorlesung> vorlesungen = new ArrayList<>();
+	private static List<VEvent> events = new ArrayList<>();
+	private static List<Module> modules = new ArrayList<>();
+	private static List<Vorlesung> vorlesungen = new ArrayList<>();
 
 	/**
 	 * URL prefix to download ics from FHDW Intranet.
@@ -78,10 +78,11 @@ public class Downloader {
 			}
 		}
 		Downloader.events = resultEvents;
+		workWithEvents();
 
 	}
 
-	public static void createAllModules() {
+	private static void workWithEvents() {
 
 		for (VEvent event : events) {
 			String summary = event.getSummary().getValue();
@@ -97,9 +98,10 @@ public class Downloader {
 				getOrCreateModule(parts[0], parts[1]);
 			}
 
-			getFullInfo(event);
+			addToVorlesungen(event);
 		}
 
+		sortVorlesungen();
 	}
 
 	private static Module getOrCreateModule(String abbreviation, String abbreviationProfessor) {
@@ -112,7 +114,7 @@ public class Downloader {
 		return modules.get(modules.size() - 1);
 	}
 
-	private static void getFullInfo(VEvent event) {
+	private static void addToVorlesungen(VEvent event) {
 		String summary = event.getSummary().getValue();
 		if (summary == null) {
 			return;
@@ -131,10 +133,10 @@ public class Downloader {
 			vorlesungen.add(new Vorlesung(dateStart, dateEnd, getOrCreateModule(parts[0], parts[1]), room, summary));
 		}
 
-		sortVorlesung();
+		
 	}
 	
-	private static void sortVorlesung() {
+	private static void sortVorlesungen() {
         List<Vorlesung> sorted = new ArrayList<>();
         Vorlesung first;
 
@@ -151,5 +153,9 @@ public class Downloader {
         }
         vorlesungen = sorted;
     }
+	
+	public static List<Vorlesung> getVorlesungen() {
+		return vorlesungen;
+	}
 
 }
