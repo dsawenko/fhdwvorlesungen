@@ -65,7 +65,7 @@ import com.amazon.speech.ui.SimpleCard;
 
 /**
  * Build Skript: mvn assembly:assembly -DdescriptorId=jar-with-dependencies package
- * @author Daniel
+ * @author Daniel Sawenko
  *
  */
 public class VorlesungenSpeechlet implements SpeechletV2 {
