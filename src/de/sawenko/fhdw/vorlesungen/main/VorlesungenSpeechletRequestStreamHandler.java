@@ -33,8 +33,7 @@ public class VorlesungenSpeechletRequestStreamHandler extends SpeechletRequestSt
          * Alexa Skill and put the relevant Application Ids in this Set.
          */
         supportedApplicationIds = new HashSet<String>();
-        supportedApplicationIds.add("amzn1.ask.skill.caf05f56-7eed-42ad-a97e-d4e1ec940fea");
-        supportedApplicationIds.add("amzn1.ask.skill.e7b1e167-9894-44c3-ba41-6e8fc74d86d1"); // DE
+        supportedApplicationIds.add("amzn1.ask.skill.e7b1e167-9894-44c3-ba41-6e8fc74d86d1"); 
     }
 
     public VorlesungenSpeechletRequestStreamHandler() {

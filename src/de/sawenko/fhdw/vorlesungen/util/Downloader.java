@@ -16,12 +16,12 @@ import biweekly.io.text.ICalReader;
 import biweekly.property.DateEnd;
 import biweekly.property.DateStart;
 import biweekly.util.DateTimeComponents;
+import de.sawenko.fhdw.vorlesungen.model.Lecturer;
 import de.sawenko.fhdw.vorlesungen.model.Module;
 import de.sawenko.fhdw.vorlesungen.model.Vorlesung;
 
 public class Downloader {
 	private static List<VEvent> events = new ArrayList<>();
-	private static List<Module> modules = new ArrayList<>();
 	private static List<Vorlesung> vorlesungen = new ArrayList<>();
 
 	/**
@@ -43,7 +43,6 @@ public class Downloader {
 		ArrayList<VEvent> events = new ArrayList<>();
 		ArrayList<VEvent> resultEvents = new ArrayList<>();
 		Downloader.events.clear();
-		Downloader.modules.clear();
 		Downloader.vorlesungen.clear();
 		events.clear();
 		resultEvents.clear();
@@ -89,53 +88,24 @@ public class Downloader {
 			if (summary == null) {
 				return;
 			}
-			String[] parts = summary.split(" ");
-			if (summary.contains("Prüfungsphase")) {
-				getOrCreateModule(summary, "");
-			} else if (parts.length != 3) {
-				getOrCreateModule(summary, "");
-			} else {
-				getOrCreateModule(parts[0], parts[1]);
-			}
 
-			addToVorlesungen(event);
+			String[] parts = summary.split(" ");
+			
+			if (parts.length == 3) {
+				DateStart dateStart = event.getDateStart();
+				DateEnd dateEnd = event.getDateEnd();
+				AbbreviationHelper abbreviationHelper = new AbbreviationHelper();
+				Module module = abbreviationHelper.getModule(parts[0]);
+				Lecturer lecturer = abbreviationHelper.getLecturer(parts[1]);
+				String room = parts[2].substring(1);
+				
+				vorlesungen.add(new Vorlesung(dateStart, dateEnd, module, lecturer, room, summary));
+			}
 		}
 
 		sortVorlesungen();
 	}
 
-	private static Module getOrCreateModule(String abbreviation, String abbreviationProfessor) {
-		for (Module m : modules) {
-			if (m.getAbbreviation().contains(abbreviation))
-				return m;
-		}
-
-		modules.add(new Module(abbreviation, abbreviationProfessor));
-		return modules.get(modules.size() - 1);
-	}
-
-	private static void addToVorlesungen(VEvent event) {
-		String summary = event.getSummary().getValue();
-		if (summary == null) {
-			return;
-		}
-
-		String[] parts = summary.split(" ");
-		DateStart dateStart = event.getDateStart();
-		DateEnd dateEnd = event.getDateEnd();
-		if (summary.contains("Prüfungsphase")) {
-			vorlesungen.add(new Vorlesung(dateStart, dateEnd, getOrCreateModule(summary, ""), "", summary));
-
-		} else if (parts.length != 3) {
-			vorlesungen.add(new Vorlesung(dateStart, dateEnd, getOrCreateModule(summary, ""), "", summary));
-		} else {
-			String room = parts[2].substring(1);
-			vorlesungen.add(new Vorlesung(dateStart, dateEnd, getOrCreateModule(parts[0], parts[1]), room, summary));
-		}
-
-		
-	}
-	
 	private static void sortVorlesungen() {
         List<Vorlesung> sorted = new ArrayList<>();
         Vorlesung first;

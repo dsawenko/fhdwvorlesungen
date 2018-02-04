@@ -294,6 +294,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
                 speechOutputBuilder.append(summary);
                 String time = getTime(v.getDateStart(), v.getDateEnd());
                 speechOutputBuilder.append(" um " + time);
+                speechOutputBuilder.append(" bei " + v.getLecturer());
                 speechOutputBuilder.append("</p> ");
                 cardOutputBuilder.append(summary);
                 cardOutputBuilder.append("\n");

@@ -14,13 +14,15 @@ public class Vorlesung {
     private DateStart dateStart;
     private DateEnd dateEnd;
     private Module module;
+    private Lecturer lecturer;
     private String room;
     private String summary;
 
-    public Vorlesung(DateStart dateStart, DateEnd dateEnd, Module module, String room, String summary) {
+    public Vorlesung(DateStart dateStart, DateEnd dateEnd, Module module, Lecturer lecturer, String room, String summary) {
         this.dateStart = dateStart;
         this.dateEnd = dateEnd;
         this.module = module;
+        this.lecturer = lecturer;
         this.room = room;
         this.summary = summary;
     }
@@ -51,11 +53,6 @@ public class Vorlesung {
         return dateStartStr + " bis " + dateEndStr;
     }
 
-  
-    public Module getModule() {
-        return module;
-    }
-
     public DateStart getDateStart() {
         return dateStart;
     }
@@ -64,17 +61,24 @@ public class Vorlesung {
         return dateEnd;
     }
 
+    public Module getModule() {
+        return module;
+    }
+
+    public Lecturer getLecturer() {
+        return lecturer;
+    }
+
     public String getRoom() {
         return room;
     }
-
-    public String getProfessor() {
-        return module.getProfessor();
-    }
-
+    
     public String toString() {
-        String s = module.toString();
-        return s != "" ? s : summary;
+    	if (module != null) {
+    		String s = module.toString();        
+    		return s != "" ? s : summary;
+    	}
+    	return "";
     }
 
 
