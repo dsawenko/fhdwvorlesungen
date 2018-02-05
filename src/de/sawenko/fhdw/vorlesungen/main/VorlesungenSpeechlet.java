@@ -9,59 +9,44 @@
  */
 package de.sawenko.fhdw.vorlesungen.main;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.amazon.speech.json.SpeechletRequestEnvelope;
-import com.amazon.speech.speechlet.Context;
-import com.amazon.speech.speechlet.interfaces.system.SystemInterface;
-import com.amazon.speech.speechlet.interfaces.system.SystemState;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.amazon.speech.json.SpeechletRequestEnvelope;
 import com.amazon.speech.slu.Intent;
 import com.amazon.speech.slu.Slot;
+import com.amazon.speech.speechlet.Context;
 import com.amazon.speech.speechlet.IntentRequest;
 import com.amazon.speech.speechlet.LaunchRequest;
+import com.amazon.speech.speechlet.Session;
+import com.amazon.speech.speechlet.SessionEndedRequest;
+import com.amazon.speech.speechlet.SessionStartedRequest;
+import com.amazon.speech.speechlet.SpeechletResponse;
+import com.amazon.speech.speechlet.SpeechletV2;
+import com.amazon.speech.speechlet.interfaces.system.SystemInterface;
+import com.amazon.speech.speechlet.interfaces.system.SystemState;
 import com.amazon.speech.speechlet.services.DirectiveEnvelope;
 import com.amazon.speech.speechlet.services.DirectiveEnvelopeHeader;
 import com.amazon.speech.speechlet.services.DirectiveService;
 import com.amazon.speech.speechlet.services.SpeakDirective;
-import com.amazon.speech.speechlet.Session;
-import com.amazon.speech.speechlet.SessionEndedRequest;
-import com.amazon.speech.speechlet.SessionStartedRequest;
-import com.amazon.speech.speechlet.SpeechletV2;
-import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.ui.OutputSpeech;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
-import com.amazon.speech.ui.SsmlOutputSpeech;
-
-import biweekly.ICalendar;
-import biweekly.component.VEvent;
-import biweekly.io.text.ICalReader;
-import biweekly.property.DateEnd;
-import biweekly.property.DateStart;
-import biweekly.util.DateTimeComponents;
-import de.sawenko.fhdw.vorlesungen.model.Vorlesung;
-import de.sawenko.fhdw.vorlesungen.util.Downloader;
-
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
+import com.amazon.speech.ui.SsmlOutputSpeech;
+
+import biweekly.property.DateEnd;
+import biweekly.property.DateStart;
+import de.sawenko.fhdw.vorlesungen.model.Vorlesung;
+import de.sawenko.fhdw.vorlesungen.util.Downloader;
 
 /**
  * Build Skript: mvn assembly:assembly -DdescriptorId=jar-with-dependencies package
@@ -157,7 +142,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 
         String intentName = requestEnvelope.getRequest().getIntent().getName();
 
-        if ("GetFirstEventIntent".equals(intentName)) {
+        if ("VorlesungIntent".equals(intentName)) {
             return handleFirstEventRequest(requestEnvelope);
         }/* else if ("GetNextEventIntent".equals(intentName)) {
             return handleNextEventRequest(requestEnvelope.getSession());
@@ -180,9 +165,28 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         } else if ("AMAZON.CancelIntent".equals(intentName)) {
             PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();
             outputSpeech.setText("Goodbye");
-
+            	
             return SpeechletResponse.newTellResponse(outputSpeech);
-        } else {
+        } 
+        else if ("CourseIntent".equals(intentName)) {
+        	PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();
+            
+            Map<String, Slot> slots = requestEnvelope.getRequest().getIntent().getSlots();
+            StringBuilder stringBuilder = new StringBuilder();
+            
+            stringBuilder.append(slots.get("CharA").getValue());
+            stringBuilder.append(slots.get("CharB").getValue());
+            stringBuilder.append(slots.get("CharC").getValue());
+            stringBuilder.append(slots.get("CharD").getValue());
+            stringBuilder.append(slots.get("CharE").getValue());
+            stringBuilder.append(slots.get("CharF").getValue());
+            stringBuilder.append(slots.get("CharG").getValue());
+            stringBuilder.append(slots.get("CharH").getValue());
+            
+            outputSpeech.setText(stringBuilder.toString());
+            return SpeechletResponse.newTellResponse(outputSpeech);
+        }
+        else {
             String outputSpeech = "Sorry, I didn't get that.";
             String repromptText = "What day do you want events for?";
 
@@ -197,7 +201,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 
         log.info("onSessionEnded requestId={}, sessionId={}", request.getRequestId(),
                 session.getSessionId());
-
+        
         // any session cleanup logic would go here
     }
 
