@@ -14,8 +14,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Map;
-import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +40,12 @@ import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
 import com.amazon.speech.ui.SsmlOutputSpeech;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 
-import biweekly.property.DateEnd;
-import biweekly.property.DateStart;
 import de.sawenko.fhdw.vorlesungen.model.Vorlesung;
+import de.sawenko.fhdw.vorlesungen.storage.VorlesungenDao;
+import de.sawenko.fhdw.vorlesungen.storage.VorlesungenDynamoDbClient;
 import de.sawenko.fhdw.vorlesungen.util.Downloader;
 
 /**
@@ -103,6 +103,8 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      * Service to send progressive response directives.
      */
     private DirectiveService directiveService;
+    
+    private AmazonDynamoDBClient amazonDynamoDBClient;
 
     /**
      * Constructs an instance of {@link VorlesungenSpeechlet}.
@@ -122,6 +124,11 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
                 session.getSessionId());
 
         // any initialization logic goes here
+        
+        if (amazonDynamoDBClient == null) {
+            amazonDynamoDBClient = new AmazonDynamoDBClient()
+            		       				.withRegion(Regions.EU_WEST_1);
+        }
     }
 
     @Override
@@ -132,7 +139,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         log.info("onLaunch requestId={}, sessionId={}", request.getRequestId(),
                 session.getSessionId());
 
-        return getWelcomeResponse();
+        return getWelcomeResponse(session);
     }
 
     @Override
@@ -143,52 +150,31 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         String intentName = requestEnvelope.getRequest().getIntent().getName();
 
         if ("VorlesungIntent".equals(intentName)) {
-            return handleFirstEventRequest(requestEnvelope);
-        }/* else if ("GetNextEventIntent".equals(intentName)) {
-            return handleNextEventRequest(requestEnvelope.getSession());
-        }*/ else if ("AMAZON.HelpIntent".equals(intentName)) {
+            return handleVorlesungenRequest(requestEnvelope);
+        } else if ("AMAZON.HelpIntent".equals(intentName)) {
             // Create the plain text output.
-            String speechOutput =
-                    "With History Buff, you can get"
-                            + " historical events for any day of the year."
-                            + " For example, you could say today,"
-                            + " or August thirtieth, or you can say exit. Now, which day do you want?";
-
-            String repromptText = "Which day do you want?";
+        	String speechOutput =
+                    "Ich kann dir deine Vorlesungen für einen bestimmten Tag nennen. "
+                            + " Zum Beispiel könntest du mich fragen, ob du morgen eine Vorlesung hast."
+                    + "Sag einfach: Frag Fuchs, welche Vorlesungen ich morgen habe.";
+        			
+            String repromptText = "Für welchen Tag möchtest du deine Vorlesungen erfahren?";
 
             return newAskResponse(speechOutput, false, repromptText, false);
         } else if ("AMAZON.StopIntent".equals(intentName)) {
             PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();
-            outputSpeech.setText("Goodbye");
+            outputSpeech.setText("Tschüss");
 
             return SpeechletResponse.newTellResponse(outputSpeech);
         } else if ("AMAZON.CancelIntent".equals(intentName)) {
             PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();
-            outputSpeech.setText("Goodbye");
+            outputSpeech.setText("Tschüss");
             	
             return SpeechletResponse.newTellResponse(outputSpeech);
         } 
-        else if ("CourseIntent".equals(intentName)) {
-        	PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();
-            
-            Map<String, Slot> slots = requestEnvelope.getRequest().getIntent().getSlots();
-            StringBuilder stringBuilder = new StringBuilder();
-            
-            stringBuilder.append(slots.get("CharA").getValue());
-            stringBuilder.append(slots.get("CharB").getValue());
-            stringBuilder.append(slots.get("CharC").getValue());
-            stringBuilder.append(slots.get("CharD").getValue());
-            stringBuilder.append(slots.get("CharE").getValue());
-            stringBuilder.append(slots.get("CharF").getValue());
-            stringBuilder.append(slots.get("CharG").getValue());
-            stringBuilder.append(slots.get("CharH").getValue());
-            
-            outputSpeech.setText(stringBuilder.toString());
-            return SpeechletResponse.newTellResponse(outputSpeech);
-        }
         else {
-            String outputSpeech = "Sorry, I didn't get that.";
-            String repromptText = "What day do you want events for?";
+            String outputSpeech = "Entschuldige, das habe ich nicht verstanden.";
+            String repromptText = "Für welchen Tag möchtest du deine Vorlesungen erfahren?";
 
             return newAskResponse(outputSpeech, true, repromptText, true);
         }
@@ -210,13 +196,22 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      *
      * @return SpeechletResponse object with voice/card response to return to the user
      */
-    private SpeechletResponse getWelcomeResponse() {
-        String speechOutput = "Willkommen beim FHDW Fuchs! Wie kann ich dir weiterhelfen?";
+    private SpeechletResponse getWelcomeResponse(Session session) {
+    	 if (amazonDynamoDBClient == null) {
+             amazonDynamoDBClient = new AmazonDynamoDBClient();
+         }
+    	
+    	VorlesungenDao dao = new VorlesungenDao(new VorlesungenDynamoDbClient(amazonDynamoDBClient));
+    	
+    	String course = dao.getCourse(session);
+    	
+        String speechOutput = "Dein Kurs ist " + course;//"Willkommen beim FHDW Fuchs! Wie kann ich dir weiterhelfen?";
         // If the user either does not reply to the welcome message or says something that is not
         // understood, they will be prompted again with this text.
-        String repromptText =
-                "Ich kann dir deine Vorlesungen für einen bestimmten Tag nennen. "
-                        + " Zum Beispiel könntest du mich fragen, ob du morgen eine Vorlesung hast.";
+        String repromptText = "";
+//                "Ich kann dir deine Vorlesungen für einen bestimmten Tag nennen. "
+//                        + " Zum Beispiel könntest du mich fragen, ob du morgen eine Vorlesung hast."
+//                        + "Sag einfach: Frag Fuchs, welche Vorlesungen ich morgen habe.";
 
         return newAskResponse(speechOutput, false, repromptText, false);
     }
@@ -235,7 +230,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         Slot daySlot = intent.getSlot(SLOT_DAY);
         Date date;
         Calendar calendar = Calendar.getInstance();
-        if (daySlot != null && daySlot.getValue() != null) {
+        if (daySlot != null && daySlot.getValue() != null) { // ToDo: Prüfen
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-d");
             try {
                 date = dateFormat.parse(daySlot.getValue());
@@ -258,7 +253,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
      *            the intent request envelope to handle
      * @return SpeechletResponse object with voice/card response to return to the user
      */
-    private SpeechletResponse handleFirstEventRequest(SpeechletRequestEnvelope<IntentRequest> requestEnvelope) {
+    private SpeechletResponse handleVorlesungenRequest(SpeechletRequestEnvelope<IntentRequest> requestEnvelope) {
         IntentRequest request = requestEnvelope.getRequest();
         Session session = requestEnvelope.getSession();
         SystemState systemState = getSystemState(requestEnvelope.getContext());
@@ -296,12 +291,13 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
             	
                 speechOutputBuilder.append("<p>");
                 speechOutputBuilder.append(summary);
-                String time = getTime(v.getDateStart(), v.getDateEnd());
-                speechOutputBuilder.append(" um " + time);
+                speechOutputBuilder.append(" um " + v.getTime());
                 speechOutputBuilder.append(" bei " + v.getLecturer());
                 speechOutputBuilder.append("</p> ");
                 cardOutputBuilder.append(summary);
                 cardOutputBuilder.append("\n");
+                cardOutputBuilder.append(" um " + v.getTime());
+                cardOutputBuilder.append(" bei " + v.getLecturer());
                 
                 
             }
@@ -453,11 +449,4 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
         return context.getState(SystemInterface.class, SystemState.class);
     }
     
-    public String getTime(DateStart dateStart, DateEnd dateEnd) {
-        DateFormat dftime = new SimpleDateFormat("HH:mm");
-        dftime.setTimeZone(TimeZone.getTimeZone( "Europe/Berlin" ));
-        String dateStartStr = (dateStart == null) ? null : dftime.format(dateStart.getValue());
-        String dateEndStr = (dateEnd == null) ? null : dftime.format(dateEnd.getValue());
-        return dateStartStr + " bis " + dateEndStr;
-    }
 }
