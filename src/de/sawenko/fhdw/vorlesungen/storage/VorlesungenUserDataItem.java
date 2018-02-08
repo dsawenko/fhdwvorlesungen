@@ -1,5 +1,6 @@
 package de.sawenko.fhdw.vorlesungen.storage;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
@@ -24,7 +25,7 @@ public class VorlesungenUserDataItem {
         this.userId = userId;
     }
     
-    @DynamoDBHashKey(attributeName = "accessCode") 
+    @DynamoDBAttribute(attributeName = "accessCode") 
     public int getAccessCode() {
 		return accessCode;
 	}
@@ -33,7 +34,7 @@ public class VorlesungenUserDataItem {
 		this.accessCode = accessCode;
 	}
 
-	@DynamoDBHashKey(attributeName = "course")
+	@DynamoDBAttribute(attributeName = "course")
 	public String getCourse() {
 		return course;
 	}

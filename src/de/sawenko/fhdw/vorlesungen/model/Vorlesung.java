@@ -2,6 +2,7 @@ package de.sawenko.fhdw.vorlesungen.model;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 import biweekly.property.DateEnd;
 import biweekly.property.DateStart;
@@ -41,6 +42,7 @@ public class Vorlesung {
     public String getDateTime() {
         DateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         DateFormat dftime = new SimpleDateFormat("HH:mm");
+        dftime.setTimeZone(TimeZone.getTimeZone( "Europe/Berlin"));
         String dateStartStr = (dateStart == null) ? null : df.format(dateStart.getValue());
         String dateEndStr = (dateEnd == null) ? null : dftime.format(dateEnd.getValue());
         return dateStartStr + " bis " + dateEndStr;
@@ -48,6 +50,7 @@ public class Vorlesung {
 
     public String getTime() {
         DateFormat dftime = new SimpleDateFormat("HH:mm");
+        dftime.setTimeZone(TimeZone.getTimeZone( "Europe/Berlin"));
         String dateStartStr = (dateStart == null) ? null : dftime.format(dateStart.getValue());
         String dateEndStr = (dateEnd == null) ? null : dftime.format(dateEnd.getValue());
         return dateStartStr + " bis " + dateEndStr;

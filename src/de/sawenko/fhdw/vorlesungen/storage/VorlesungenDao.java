@@ -23,8 +23,6 @@ public class VorlesungenDao {
     public String getCourse(Session session) {
         VorlesungenUserDataItem item = new VorlesungenUserDataItem();
         item.setUserId(session.getUser().getUserId());
-        item.setAccessCode(123456);
-        item.setCourse("IFBW415A");
         
 
         item = dynamoDbClient.loadItem(item);

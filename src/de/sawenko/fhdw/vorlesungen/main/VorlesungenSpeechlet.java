@@ -295,9 +295,9 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
                 speechOutputBuilder.append(" bei " + v.getLecturer());
                 speechOutputBuilder.append("</p> ");
                 cardOutputBuilder.append(summary);
-                cardOutputBuilder.append("\n");
                 cardOutputBuilder.append(" um " + v.getTime());
                 cardOutputBuilder.append(" bei " + v.getLecturer());
+                cardOutputBuilder.append("\n");
                 
                 
             }
