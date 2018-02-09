@@ -227,6 +227,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 				+ "<p><prosody volume=\"x-loud\" rate=\"80%\">" + accessCodeOutput + "</prosody></p>"
 				+ "<p>Ich wiederhole: <prosody volume=\"x-loud\" rate=\"80%\">http://localhost/alexa</prosody> und gebe den folgenden Zugangscode ein:</p>"
 				+ "<p><prosody volume=\"x-loud\" rate=\"80%\">" + accessCodeOutput + "</prosody></p></speak>"; 
+		
 		SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
 		outputSpeech.setSsml(speechOutput);
 		return SpeechletResponse.newTellResponse(outputSpeech);
