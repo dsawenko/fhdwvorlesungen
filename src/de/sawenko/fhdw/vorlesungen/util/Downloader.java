@@ -28,7 +28,6 @@ public class Downloader {
 	private static List<VEvent> events = new ArrayList<>();
 	private static List<Vorlesung> vorlesungen = new ArrayList<>();
 	
-	private static final Logger log = LoggerFactory.getLogger(Downloader.class);
 
 	/**
 	 * URL prefix to download ics from FHDW Intranet.
@@ -54,7 +53,6 @@ public class Downloader {
 		resultEvents.clear();
 		try {
 			URL url = new URL(URL_PREFIX + course.toLowerCase() + ".ics");
-			log.debug("ICS-URL:" + url.toString());
 			inputStream = new InputStreamReader(url.openStream(), Charset.forName("US-ASCII"));
 
 			reader = new ICalReader(inputStream);
@@ -105,8 +103,20 @@ public class Downloader {
 				Lecturer lecturer = dao.getLecturer(parts[1]);
 				String room = parts[2].substring(1);
 				
-				vorlesungen.add(new Vorlesung(dateStart, dateEnd, module, lecturer, room, summary));
+				if (module != null && lecturer != null)
+					vorlesungen.add(new Vorlesung(dateStart, dateEnd, module, lecturer, room, summary));
+			} else if (parts.length == 4) {
+				DateStart dateStart = event.getDateStart();
+				DateEnd dateEnd = event.getDateEnd();
+				Module module = dao.getModule(parts[0] +" " + parts[1]);
+				Lecturer lecturer = dao.getLecturer(parts[2]);
+				String room = parts[3].substring(1);
+				
+				if (module != null && lecturer != null)
+					vorlesungen.add(new Vorlesung(dateStart, dateEnd, module, lecturer, room, summary));
 			}
+			
+			
 		}
 
 		sortVorlesungen();

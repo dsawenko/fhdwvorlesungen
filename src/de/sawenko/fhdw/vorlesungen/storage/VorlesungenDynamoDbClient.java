@@ -59,7 +59,7 @@ public class VorlesungenDynamoDbClient {
 	}
 
 	public int getNewAccessCode() {
-		return getNewAccessCode(10); // 10 Versuche einen neuen accessCode zu generieren
+		return getNewAccessCode(100); // 10 Versuche einen neuen accessCode zu generieren
 	}
 
 	private int getNewAccessCode(int timeToLive) {
@@ -68,7 +68,7 @@ public class VorlesungenDynamoDbClient {
 
 		DynamoDB dynamoDB = new DynamoDB(dynamoDBClient);
 
-		int accessCode = randInt(0, 999999);
+		int accessCode = randInt(100000, 999999);
 
 		Table table = dynamoDB.getTable("VorlesungenUserData");
 		Index index = table.getIndex("accessCode-index");

@@ -217,16 +217,16 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 		
 		StringBuilder accessCodeOutputBuilder = new StringBuilder();
 		for (Character c : accessCode.toCharArray())
-			accessCodeOutputBuilder.append(c + " ");
+			accessCodeOutputBuilder.append(c + "<break time=\"300ms\"/> ");
 		String accessCodeOutput = accessCodeOutputBuilder.toString();
 		
-		speechOutput = "<speak>Willkommen beim FHDW Fuchs! "
-				+ "Ich kann dir deine Vorlesungen für einen bestimmten Tag nennen. "
-				+ "Um mehr über deinen Vorlesungsplan abrufen zu können, benötige ich dein Studiengangskürzel. "
-				+ "Gehe hierzu auf http://localhost/alexa und gebe den folgenden Zugangscode ein:"
-				+ "<emphasis level=\"strong\">" + accessCodeOutput + "</emphasis>" 
-				+ "Ich wiederhole: http://localhost/alexa und gebe den folgenden Zugangscode ein:"
-				+ "<emphasis level=\"strong\">" + accessCodeOutput + "</emphasis></speak>"; 
+		speechOutput = "<speak><p>Willkommen beim FHDW Fuchs! "
+				+ "Ich kann dir deine Vorlesungen für einen bestimmten Tag nennen. </p>"
+				+ "<p>Um deinen Vorlesungsplan abrufen zu können, benötige ich dein Studiengangskürzel. </p>"
+				+ "<p>Gehe hierzu auf <prosody volume=\"x-loud\" rate=\"80%\">http://localhost/alexa</prosody> und gebe den folgenden Zugangscode ein:</p>"
+				+ "<p><prosody volume=\"x-loud\" rate=\"80%\">" + accessCodeOutput + "</prosody></p>"
+				+ "<p>Ich wiederhole: <prosody volume=\"x-loud\" rate=\"80%\">http://localhost/alexa</prosody> und gebe den folgenden Zugangscode ein:</p>"
+				+ "<p><prosody volume=\"x-loud\" rate=\"80%\">" + accessCodeOutput + "</prosody></p></speak>"; 
 		SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
 		outputSpeech.setSsml(speechOutput);
 		return SpeechletResponse.newTellResponse(outputSpeech);
@@ -234,7 +234,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 
 	/**
 	 * Function to accept an intent containing a Day slot (date object) and return
-	 * the Calendar representation of that slot value. If the user provides a date,
+	 * the Calendar representation of that slot	 value. If the user provides a date,
 	 * then use that, otherwise use today. The date is in server time, not in the
 	 * user's time zone. So "today" for the user may actually be tomorrow.
 	 *
@@ -307,7 +307,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 			cardOutputBuilder.append(cardPrefixContent);
 			for (Vorlesung v : Downloader.getVorlesungen()) {
 				String summary = v.toString();
-				// Test
+				
 				speechOutputBuilder.append("<p>");
 				speechOutputBuilder.append(summary);
 				speechOutputBuilder.append(" von " + v.getTime());
