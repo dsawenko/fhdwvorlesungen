@@ -1,4 +1,4 @@
-package de.sawenko.fhdw.vorlesungen.storage;
+package de.sawenko.fhdw.vorlesungen.model;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
  * skill.
  */
 @DynamoDBTable(tableName = "VorlesungenUserData")
-public class VorlesungenUserDataItem {
+public class User{
 
     private String userId;
     private int accessCode;

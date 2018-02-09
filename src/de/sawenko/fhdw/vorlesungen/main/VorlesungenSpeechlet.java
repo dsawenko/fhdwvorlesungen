@@ -289,7 +289,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 		// dispatchProgressiveResponse(request.getRequestId(), "Searching", systemState,
 		// apiEndpoint);
 
-		Downloader.getEventsFromFHDW(course, calendar);
+		Downloader.getEventsFromFHDW(course, calendar, dao);
 
 		String speechOutput = "";
 		if (Downloader.getVorlesungen().isEmpty()) {
@@ -310,11 +310,11 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 
 				speechOutputBuilder.append("<p>");
 				speechOutputBuilder.append(summary);
-				speechOutputBuilder.append(" um " + v.getTime());
+				speechOutputBuilder.append(" von " + v.getTime());
 				speechOutputBuilder.append(" bei " + v.getLecturer());
 				speechOutputBuilder.append("</p> ");
 				cardOutputBuilder.append(summary);
-				cardOutputBuilder.append(" um " + v.getTime());
+				cardOutputBuilder.append(" von " + v.getTime());
 				cardOutputBuilder.append(" bei " + v.getLecturer());
 				cardOutputBuilder.append("\n");
 

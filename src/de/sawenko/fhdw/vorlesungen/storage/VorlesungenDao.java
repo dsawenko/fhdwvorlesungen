@@ -2,6 +2,10 @@ package de.sawenko.fhdw.vorlesungen.storage;
 
 import com.amazon.speech.speechlet.Session;
 
+import de.sawenko.fhdw.vorlesungen.model.Lecturer;
+import de.sawenko.fhdw.vorlesungen.model.Module;
+import de.sawenko.fhdw.vorlesungen.model.User;
+
 /**
  * Contains the methods to interact with the persistence layer for ScoreKeeper
  * in DynamoDB.
@@ -23,29 +27,43 @@ public class VorlesungenDao {
 	 * @return
 	 */
 	public String getCourse(Session session) {
-		VorlesungenUserDataItem item = new VorlesungenUserDataItem();
-		item.setUserId(session.getUser().getUserId());
+		User user = new User();
+		user.setUserId(session.getUser().getUserId());
 
-		item = dynamoDbClient.loadItem(item);
+		user = (User) dynamoDbClient.loadItem(user);
 
-		if (item == null) {
+		if (user == null) {
 			return null;
 		}
 
-		return item.getCourse();
+		return user.getCourse();
 	}
 
+	public Lecturer getLecturer(String abbreviation) {
+		Lecturer lecturer = new Lecturer();
+		lecturer.setAbbreviation(abbreviation);
+		return dynamoDbClient.loadItem(lecturer);
+	}
+	
+	public Module getModule(String abbreviation) {
+		Module module = new Module();
+		module.setAbbreviation(abbreviation);
+		return dynamoDbClient.loadItem(module);
+	}
+	
 	public int createNewUser(Session session) {
 		// neuen accessCode ermitteln
 		int accessCode = dynamoDbClient.getNewAccessCode();
 
 		// User erstellen
-		VorlesungenUserDataItem item = new VorlesungenUserDataItem();
-		item.setUserId(session.getUser().getUserId());
-		item.setAccessCode(accessCode);
+		User user = new User();
+		user.setUserId(session.getUser().getUserId());
+		user.setAccessCode(accessCode);
 
-		dynamoDbClient.saveItem(item);
+		dynamoDbClient.saveItem(user);
 		// accessCode zurückgeben
 		return accessCode;
 	}
+	
+	
 }

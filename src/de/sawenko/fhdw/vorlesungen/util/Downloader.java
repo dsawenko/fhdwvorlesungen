@@ -9,6 +9,8 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import biweekly.ICalendar;
 import biweekly.component.VEvent;
@@ -16,13 +18,17 @@ import biweekly.io.text.ICalReader;
 import biweekly.property.DateEnd;
 import biweekly.property.DateStart;
 import biweekly.util.DateTimeComponents;
+import de.sawenko.fhdw.vorlesungen.main.VorlesungenSpeechlet;
 import de.sawenko.fhdw.vorlesungen.model.Lecturer;
 import de.sawenko.fhdw.vorlesungen.model.Module;
 import de.sawenko.fhdw.vorlesungen.model.Vorlesung;
+import de.sawenko.fhdw.vorlesungen.storage.VorlesungenDao;
 
 public class Downloader {
 	private static List<VEvent> events = new ArrayList<>();
 	private static List<Vorlesung> vorlesungen = new ArrayList<>();
+	
+	private static final Logger log = LoggerFactory.getLogger(Downloader.class);
 
 	/**
 	 * URL prefix to download ics from FHDW Intranet.
@@ -37,7 +43,7 @@ public class Downloader {
 	 *            the course to get events for, example: ifbw415a
 	 * @return list of events for that course
 	 */
-	public static void getEventsFromFHDW(String course, Calendar calendar) {
+	public static void getEventsFromFHDW(String course, Calendar calendar, VorlesungenDao dao) {
 		InputStreamReader inputStream = null;
 		ICalReader reader = null;
 		ArrayList<VEvent> events = new ArrayList<>();
@@ -47,7 +53,8 @@ public class Downloader {
 		events.clear();
 		resultEvents.clear();
 		try {
-			URL url = new URL(URL_PREFIX + course + ".ics");
+			URL url = new URL(URL_PREFIX + course.toLowerCase() + ".ics");
+			log.debug("ICS-URL:" + url.toString());
 			inputStream = new InputStreamReader(url.openStream(), Charset.forName("US-ASCII"));
 
 			reader = new ICalReader(inputStream);
@@ -77,11 +84,11 @@ public class Downloader {
 			}
 		}
 		Downloader.events = resultEvents;
-		workWithEvents();
+		workWithEvents(dao);
 
 	}
 
-	private static void workWithEvents() {
+	private static void workWithEvents(VorlesungenDao dao) {
 
 		for (VEvent event : events) {
 			String summary = event.getSummary().getValue();
@@ -94,9 +101,8 @@ public class Downloader {
 			if (parts.length == 3) {
 				DateStart dateStart = event.getDateStart();
 				DateEnd dateEnd = event.getDateEnd();
-				AbbreviationHelper abbreviationHelper = new AbbreviationHelper();
-				Module module = abbreviationHelper.getModule(parts[0]);
-				Lecturer lecturer = abbreviationHelper.getLecturer(parts[1]);
+				Module module = dao.getModule(parts[0]);
+				Lecturer lecturer = dao.getLecturer(parts[1]);
 				String room = parts[2].substring(1);
 				
 				vorlesungen.add(new Vorlesung(dateStart, dateEnd, module, lecturer, room, summary));

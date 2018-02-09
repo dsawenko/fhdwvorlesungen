@@ -25,6 +25,15 @@ public class VorlesungenDynamoDbClient {
 	}
 
 	/**
+	 * Creates a {@link DynamoDBMapper} using the default configurations.
+	 * 
+	 * @return
+	 */
+	private DynamoDBMapper createDynamoDBMapper() {
+		return new DynamoDBMapper(dynamoDBClient);
+	}
+
+	/**
 	 * Loads an item from DynamoDB by primary Hash Key. Callers of this method
 	 * should pass in an object which represents an item in the DynamoDB table item
 	 * with the primary key populated.
@@ -32,29 +41,21 @@ public class VorlesungenDynamoDbClient {
 	 * @param tableItem
 	 * @return
 	 */
-	public VorlesungenUserDataItem loadItem(final VorlesungenUserDataItem tableItem) {
+	public <T> T loadItem(final T tableItem) {
 		DynamoDBMapper mapper = createDynamoDBMapper();
-		VorlesungenUserDataItem item = mapper.load(tableItem);
-		return item;
+		T resultItem = mapper.load(tableItem);
+		return resultItem;
 	}
 
 	/**
 	 * Stores an item to DynamoDB.
+	 * @param <T>
 	 * 
 	 * @param tableItem
 	 */
-	public void saveItem(final VorlesungenUserDataItem tableItem) {
+	public <T> void saveItem(final T tableItem) {
 		DynamoDBMapper mapper = createDynamoDBMapper();
 		mapper.save(tableItem);
-	}
-
-	/**
-	 * Creates a {@link DynamoDBMapper} using the default configurations.
-	 * 
-	 * @return
-	 */
-	private DynamoDBMapper createDynamoDBMapper() {
-		return new DynamoDBMapper(dynamoDBClient);
 	}
 
 	public int getNewAccessCode() {
