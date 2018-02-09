@@ -307,7 +307,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 			cardOutputBuilder.append(cardPrefixContent);
 			for (Vorlesung v : Downloader.getVorlesungen()) {
 				String summary = v.toString();
-
+				// Test
 				speechOutputBuilder.append("<p>");
 				speechOutputBuilder.append(summary);
 				speechOutputBuilder.append(" von " + v.getTime());
