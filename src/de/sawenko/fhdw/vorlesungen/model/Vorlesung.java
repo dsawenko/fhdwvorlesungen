@@ -76,6 +76,7 @@ public class Vorlesung {
         return room;
     }
     
+    @Override
     public String toString() {
     	if (module != null) {
     		String s = module.toString();        

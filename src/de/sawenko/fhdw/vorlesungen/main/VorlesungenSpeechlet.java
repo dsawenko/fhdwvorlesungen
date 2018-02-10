@@ -307,15 +307,27 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 			StringBuilder cardOutputBuilder = new StringBuilder();
 			cardOutputBuilder.append(cardPrefixContent);
 			for (Vorlesung v : Downloader.getVorlesungen()) {
-				String summary = v.toString();
 				
 				speechOutputBuilder.append("<p>");
-				speechOutputBuilder.append(summary);
+				
+				// Modulname
+				String moduleSayAs = v.getModule().getSayAs();
+				if (moduleSayAs == null || moduleSayAs.equals(""))
+					moduleSayAs = v.getModule().toString();
+				speechOutputBuilder.append(moduleSayAs);
 				speechOutputBuilder.append(" von " + v.getTime());
-				speechOutputBuilder.append(" bei " + v.getLecturer());
+				
+				// Dozentenname
+				String lecturerSayAs = v.getLecturer().getSayAs();
+				if (lecturerSayAs == null || lecturerSayAs.equals(""))
+					lecturerSayAs = v.getLecturer().toString();
+				if (lecturerSayAs != null && !lecturerSayAs.equals(""))
+					speechOutputBuilder.append(" bei " + lecturerSayAs);
+					
 				speechOutputBuilder.append("</p> ");
-				cardOutputBuilder.append(summary);
+				cardOutputBuilder.append(v.toString());
 				cardOutputBuilder.append(" von " + v.getTime());
+				// Hier auch noch prüfen auf null
 				cardOutputBuilder.append(" bei " + v.getLecturer());
 				cardOutputBuilder.append("\n");
 

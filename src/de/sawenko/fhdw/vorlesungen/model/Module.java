@@ -13,6 +13,7 @@ public class Module {
 
 	private String abbreviation;
 	private String name;
+	private String sayAs;
 	
 	@DynamoDBHashKey(attributeName = "abbreviation")
     public String getAbbreviation() {
@@ -30,6 +31,15 @@ public class Module {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	@DynamoDBAttribute(attributeName = "sayAs") 
+	public String getSayAs() {
+		return sayAs;
+	}
+
+	public void setSayAs(String sayAs) {
+		this.sayAs = sayAs;
 	}
 
 	@Override

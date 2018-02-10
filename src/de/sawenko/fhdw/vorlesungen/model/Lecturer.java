@@ -16,6 +16,7 @@ public class Lecturer {
 	private String name;
 	private String email;
 	private String function;
+	private String sayAs;
 
 	@DynamoDBHashKey(attributeName = "abbreviation")
     public String getAbbreviation() {
@@ -60,6 +61,15 @@ public class Lecturer {
 
 	public void setFunction(String function) {
 		this.function = function;
+	}
+	
+	@DynamoDBAttribute(attributeName = "sayAs") 
+	public String getSayAs() {
+		return sayAs;
+	}
+
+	public void setSayAs(String sayAs) {
+		this.sayAs = sayAs;
 	}
 
 	@Override

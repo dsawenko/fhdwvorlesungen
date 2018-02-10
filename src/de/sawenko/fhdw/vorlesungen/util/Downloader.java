@@ -103,7 +103,7 @@ public class Downloader {
 				Lecturer lecturer = dao.getLecturer(parts[1]);
 				String room = parts[2].substring(1);
 				
-				if (module != null && lecturer != null)
+				//if (module != null && lecturer != null)
 					vorlesungen.add(new Vorlesung(dateStart, dateEnd, module, lecturer, room, summary));
 			} else if (parts.length == 4) {
 				DateStart dateStart = event.getDateStart();
@@ -112,7 +112,7 @@ public class Downloader {
 				Lecturer lecturer = dao.getLecturer(parts[2]);
 				String room = parts[3].substring(1);
 				
-				if (module != null && lecturer != null)
+				//if (module != null && lecturer != null)
 					vorlesungen.add(new Vorlesung(dateStart, dateEnd, module, lecturer, room, summary));
 			}
 			
