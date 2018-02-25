@@ -187,7 +187,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 	}
 
 	/**
-	 * Function to handle the onLaunch skill behavior.
+	 * Function to handle the onLaunch skill behavior. 
 	 *
 	 * @return SpeechletResponse object with voice/card response to return to the
 	 *         user
