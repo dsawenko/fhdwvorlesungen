@@ -223,9 +223,9 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 		speechOutput = "<speak><p>Willkommen beim FHDW Fuchs! "
 				+ "Ich kann dir deine Vorlesungen für einen bestimmten Tag nennen. </p>"
 				+ "<p>Um deinen Vorlesungsplan abrufen zu können, benötige ich dein Studiengangskürzel. </p>"
-				+ "<p>Gehe hierzu auf <prosody volume=\"x-loud\" rate=\"80%\">http://localhost/alexa</prosody> und gebe den folgenden Zugangscode ein:</p>"
+				+ "<p>Gehe hierzu auf <prosody volume=\"x-loud\" rate=\"80%\"><sub alias=\"fuchs punkt Skuhl of DiggiTahlisation punkt de\">fuchs.schoolofdigitalisation.de</sub></prosody> und gebe den folgenden Zugangscode ein:</p>"
 				+ "<p><prosody volume=\"x-loud\" rate=\"80%\">" + accessCodeOutput + "</prosody></p>"
-				+ "<p>Ich wiederhole: <prosody volume=\"x-loud\" rate=\"80%\">http://localhost/alexa</prosody> und gebe den folgenden Zugangscode ein:</p>"
+				+ "<p>Ich wiederhole: <prosody volume=\"x-loud\" rate=\"80%\"><sub alias=\"fuchs punkt Skuhl of DiggiTahlisation punkt de\">fuchs.schoolofdigitalisation.de</sub></prosody> und gebe den folgenden Zugangscode ein:</p>"
 				+ "<p><prosody volume=\"x-loud\" rate=\"80%\">" + accessCodeOutput + "</prosody></p></speak>"; 
 		
 		SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
