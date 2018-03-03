@@ -27,7 +27,7 @@ public class Downloader {
 	
 
 	/**
-	 * URL prefix to download ics from FHDW Intranet.
+	 * URL prefix to download ics from FHDW Intranet. 
 	 */
 	private static final String URL_PREFIX = "http://intranet.bib.de/ical/";
 
