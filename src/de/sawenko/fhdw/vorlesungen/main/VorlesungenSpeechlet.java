@@ -31,10 +31,7 @@ import com.amazon.speech.speechlet.SpeechletResponse;
 import com.amazon.speech.speechlet.SpeechletV2;
 import com.amazon.speech.speechlet.interfaces.system.SystemInterface;
 import com.amazon.speech.speechlet.interfaces.system.SystemState;
-import com.amazon.speech.speechlet.services.DirectiveEnvelope;
-import com.amazon.speech.speechlet.services.DirectiveEnvelopeHeader;
 import com.amazon.speech.speechlet.services.DirectiveService;
-import com.amazon.speech.speechlet.services.SpeakDirective;
 import com.amazon.speech.ui.OutputSpeech;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
@@ -57,27 +54,6 @@ import de.sawenko.fhdw.vorlesungen.util.Downloader;
  */
 public class VorlesungenSpeechlet implements SpeechletV2 {
 	private static final Logger log = LoggerFactory.getLogger(VorlesungenSpeechlet.class);
-
-	/**
-	 * Constant defining number of events to be read at one time.
-	 */
-	private static final int PAGINATION_SIZE = 3;
-
-	/**
-	 * Length of the delimiter between individual events.
-	 */
-	private static final int DELIMITER_SIZE = 2;
-
-	/**
-	 * Constant defining session attribute key for the event index.
-	 */
-	private static final String SESSION_INDEX = "index";
-
-	/**
-	 * Constant defining session attribute key for the event text key for date of
-	 * events.
-	 */
-	private static final String SESSION_TEXT = "text";
 
 	/**
 	 * Constant defining session attribute key for the intent slot key for the date
@@ -247,7 +223,7 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 		Slot daySlot = intent.getSlot(SLOT_DAY);
 		Date date;
 		Calendar calendar = Calendar.getInstance();
-		if (daySlot != null && daySlot.getValue() != null) { // ToDo: Prüfen
+		if (daySlot != null && daySlot.getValue() != null) { 
 			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-d");
 			try {
 				date = dateFormat.parse(daySlot.getValue());
@@ -274,9 +250,6 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 	private SpeechletResponse handleVorlesungenRequest(SpeechletRequestEnvelope<IntentRequest> requestEnvelope,
 			String course) {
 		IntentRequest request = requestEnvelope.getRequest();
-		Session session = requestEnvelope.getSession();
-		SystemState systemState = getSystemState(requestEnvelope.getContext());
-		String apiEndpoint = systemState.getApiEndpoint();
 
 		Calendar calendar = getCalendar(request.getIntent());
 		String month = MONTH_NAMES[calendar.get(Calendar.MONTH)];
@@ -349,52 +322,6 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 	}
 
 	/**
-	 * Prepares the speech to reply to the user. Obtains the list of events as well
-	 * as the current index from the session attributes. After getting the next set
-	 * of events, increment the index and store it back in session attributes. This
-	 * allows us to obtain new events without making repeated network calls, by
-	 * storing values (events, index) during the interaction with the user.
-	 *
-	 * @param session
-	 *            object containing session attributes with events list and index
-	 * @return SpeechletResponse object with voice/card response to return to the
-	 *         user
-	 */
-	/*
-	 * private SpeechletResponse handleNextEventRequest(Session session) { String
-	 * cardTitle = "More events on this day in history"; ArrayList<VEvent> events =
-	 * (ArrayList<VEvent>) session.getAttribute(SESSION_TEXT); int index = (Integer)
-	 * session.getAttribute(SESSION_INDEX); String speechOutput = ""; String
-	 * cardOutput = ""; if (events == null) { speechOutput =
-	 * "With History Buff, you can get historical events for any day of the year." +
-	 * " For example, you could say today, or August thirtieth." +
-	 * " Now, which day do you want?"; } else if (index >= events.size()) {
-	 * speechOutput =
-	 * "There are no more events for this date. Try another date by saying, " +
-	 * " get events for august thirtieth."; } else { StringBuilder
-	 * speechOutputBuilder = new StringBuilder(); StringBuilder cardOutputBuilder =
-	 * new StringBuilder(); for (int i = 0; i < PAGINATION_SIZE && index <
-	 * events.size(); i++) { speechOutputBuilder.append("<p>");
-	 * speechOutputBuilder.append(events.get(index).getSummary().getValue());
-	 * speechOutputBuilder.append("</p> ");
-	 * cardOutputBuilder.append(events.get(index).getSummary().getValue());
-	 * cardOutputBuilder.append(" "); index++; } if (index < events.size()) {
-	 * speechOutputBuilder.append(" Wanna go deeper in history?");
-	 * cardOutputBuilder.append(" Wanna go deeper in history?"); }
-	 * session.setAttribute(SESSION_INDEX, index); speechOutput =
-	 * speechOutputBuilder.toString(); cardOutput = cardOutputBuilder.toString(); }
-	 * String repromptText =
-	 * "Do you want to know more about what happened on this date?";
-	 * 
-	 * // Create the Simple card content. SimpleCard card = new SimpleCard();
-	 * card.setTitle(cardTitle); card.setContent(cardOutput.toString());
-	 * 
-	 * SpeechletResponse response = newAskResponse("<speak>" + speechOutput +
-	 * "</speak>", true, repromptText, false); response.setCard(card); return
-	 * response; }
-	 */
-
-	/**
 	 * Wrapper for creating the Ask response from the input strings.
 	 *
 	 * @param stringOutput
@@ -428,35 +355,6 @@ public class VorlesungenSpeechlet implements SpeechletV2 {
 		Reprompt reprompt = new Reprompt();
 		reprompt.setOutputSpeech(repromptOutputSpeech);
 		return SpeechletResponse.newAskResponse(outputSpeech, reprompt);
-	}
-
-	/**
-	 * Dispatches a progressive response.
-	 *
-	 * @param requestId
-	 *            the unique request identifier
-	 * @param text
-	 *            the text of the progressive response to send
-	 * @param systemState
-	 *            the SystemState object
-	 * @param apiEndpoint
-	 *            the Alexa API endpoint
-	 */
-	private void dispatchProgressiveResponse(String requestId, String text, SystemState systemState,
-			String apiEndpoint) {
-		DirectiveEnvelopeHeader header = DirectiveEnvelopeHeader.builder().withRequestId(requestId).build();
-		SpeakDirective directive = SpeakDirective.builder().withSpeech(text).build();
-		DirectiveEnvelope directiveEnvelope = DirectiveEnvelope.builder().withHeader(header).withDirective(directive)
-				.build();
-
-		if (systemState.getApiAccessToken() != null && !systemState.getApiAccessToken().isEmpty()) {
-			String token = systemState.getApiAccessToken();
-			try {
-				directiveService.enqueue(directiveEnvelope, apiEndpoint, token);
-			} catch (Exception e) {
-				log.error("Failed to dispatch a progressive response", e);
-			}
-		}
 	}
 
 	/**
